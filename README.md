@@ -1,6 +1,9 @@
 # Local-Dream-Proxy
 Connects Local Dream HTTP API requests to sillytavern.
 
+Local Dream github:
+https://github.com/xororz/local-dream
+
 How to install in termux:-
 
 1.install the these requirements
