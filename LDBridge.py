@@ -155,5 +155,5 @@ def root():
     return "LD Bridge running"
 
 if __name__ == "__main__":
-    print("LD Bridge starting on :7860 → LD API at 127.0.0.1:8081")
+    print("LD Bridge starting on :7866 → LD API at 127.0.0.1:8081")
     app.run(host="127.0.0.1", port=7866)
