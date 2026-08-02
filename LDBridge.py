@@ -1,6 +1,7 @@
 import base64
 import io
 import json
+import re
 import requests
 from flask import Flask, request, jsonify
 from PIL import Image
@@ -9,6 +10,8 @@ import numpy as np
 app = Flask(__name__)
 
 LD_API = "http://127.0.0.1:8081"
+
+# --- Helpers ---
 
 SCHEDULER_MAP = {
     "DPM++ 2M": "dpm",
@@ -26,6 +29,7 @@ SCHEDULER_MAP = {
 }
 
 def a1111_to_ld(req_json):
+    """Translate A1111 txt2img request to LD Guide /generate body."""
     ld = {}
     ld["prompt"] = req_json.get("prompt", "")
     ld["negative_prompt"] = req_json.get("negative_prompt", "")
@@ -46,13 +50,15 @@ def a1111_to_ld(req_json):
     combined = f"{sampler} {scheduler}".strip()
     ld["scheduler"] = SCHEDULER_MAP.get(sampler, SCHEDULER_MAP.get(combined, "dpm"))
 
+    # img2img support
     if "init_images" in req_json and req_json["init_images"]:
-        ld["image"] = req_json["init_images"][0]
+        ld["image"] = req_json["init_images"][0]  # already base64 PNG/JPG
         ld["denoise_strength"] = req_json.get("denoising_strength", 0.6)
 
     return ld
 
 def raw_rgb_to_png_base64(raw_b64, width, height, channels=3):
+    """Convert LD's raw RGB base64 to a PNG base64 string."""
     raw_bytes = base64.b64decode(raw_b64)
     img_array = np.frombuffer(raw_bytes, dtype=np.uint8).reshape(height, width, channels)
     img = Image.fromarray(img_array, "RGB")
@@ -60,17 +66,21 @@ def raw_rgb_to_png_base64(raw_b64, width, height, channels=3):
     img.save(buf, format="PNG")
     return base64.b64encode(buf.getvalue()).decode()
 
+# --- A1111-compatible endpoints ---
+
 @app.route("/sdapi/v1/txt2img", methods=["POST"])
 def txt2img():
     ld_body = a1111_to_ld(request.json)
+    print(f"[bridge] → LD /generate: {json.dumps({k:v for k,v in ld_body.items() if k != 'image'})}")
 
-    resp = requests.post(f"{LD_API}/generate", json=ld_body, stream=True, timeout=180)
+    resp = requests.post(f"{LD_API}/generate", json=ld_body, stream=True, timeout=120)
 
     final_image_b64 = None
     final_seed = -1
     final_width = 512
     final_height = 512
 
+    # Parse SSE stream
     for line in resp.iter_lines(decode_unicode=True):
         if not line:
             continue
@@ -87,6 +97,7 @@ def txt2img():
     if not final_image_b64:
         return jsonify({"error": "No image in response"}), 500
 
+    # Convert raw RGB → PNG
     png_b64 = raw_rgb_to_png_base64(final_image_b64, final_width, final_height)
 
     return jsonify({
@@ -97,6 +108,7 @@ def txt2img():
 
 @app.route("/sdapi/v1/img2img", methods=["POST"])
 def img2img():
+    # Same as txt2img — LD uses the presence of `image` field to switch modes
     return txt2img()
 
 @app.route("/sdapi/v1/samplers", methods=["GET"])
@@ -137,9 +149,11 @@ def upscalers():
 def latent_upscale():
     return jsonify([])
 
+# --- Health check ---
 @app.route("/", methods=["GET"])
 def root():
     return "LD Bridge running"
 
 if __name__ == "__main__":
+    print("LD Bridge starting on :7860 → LD API at 127.0.0.1:8081")
     app.run(host="127.0.0.1", port=7866)
