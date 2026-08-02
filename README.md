@@ -25,7 +25,7 @@ curl -O https://raw.githubusercontent.com/thewalkingcat/Local-Dream-Proxy/main/L
 ```
 python LDBridge.py
 ```
-then it should say : "* Running on http://127.0.0.1:7860" indicating its running successfuly
+then it should say : "* Running on http://127.0.0.1:7866" indicating its running successfuly
 
 4. open Local Dream app and choose an image model.
 
@@ -36,7 +36,7 @@ Open SillyTavern
 Go to Extensions (puzzle piece icon in the top bar)
 Select Image Generation from the dropdown
 Set Source to: Stable Diffusion WebUI / AUTOMATIC1111
-In the API URL field enter: http://127.0.0.1:7860
+In the API URL field enter: http://127.0.0.1:7866
 Click Connect — you should get a confirmation toast
 
 7.configure parameters for your image gen such as schedulers steps cfg and such according to image model. you can refer to local dream's setting because some image models need to be on the right setting for it to actually work.
@@ -45,7 +45,7 @@ now you should able to generate the image in sillytavern using local dream's htt
 
 How it works:
 ```
-SillyTavern  --->  POST /sdapi/v1/txt2img  --->  LDBridge (:7860)
+SillyTavern  --->  POST /sdapi/v1/txt2img  --->  LDBridge (:7866)
                                                        |
                                                Translates A1111 to LD format
                                                        |
@@ -60,5 +60,5 @@ SillyTavern  --->  POST /sdapi/v1/txt2img  --->  LDBridge (:7860)
                                                   Raw RGB -> PNG base64
                                                        |
                                                        v
-SillyTavern  <---  A1111 JSON response  <---  LDBridge (:7860)
+SillyTavern  <---  A1111 JSON response  <---  LDBridge (:7866)
 ```
