@@ -18,7 +18,7 @@ pip install flask pillow requests
 
 2. download the script into termux home folder for easy access. you can clone it instead if you want.
 ```
-curl -O LDBridge.py https://raw.githubusercontent.com/thewalkingcat/Local-Dream-Proxy/main/LDBridge.py
+curl -L -o LDBridge.py https://raw.githubusercontent.com/thewalkingcat/Local-Dream-Proxy/main/LDBridge.py
 ```
 
 3. run the script. if sillytavern was running on it, make a new instance and run the script on that.
