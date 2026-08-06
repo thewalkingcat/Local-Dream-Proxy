@@ -32,7 +32,13 @@ def translate_request(req_json):
     body["negative_prompt"] = req_json.get("negative_prompt", "")
     body["steps"] = req_json.get("steps", 20)
     body["cfg"] = req_json.get("cfg_scale", 7.5)
-    body["seed"] = req_json.get("seed", -1)
+
+    # Fix: If seed is -1, generate a random unsigned 32-bit integer
+    seed = req_json.get("seed", -1)
+    if seed == -1:
+        body["seed"] = random.randint(0, 4294967295)
+    else:
+        body["seed"] = seed
 
     w = req_json.get("width", 512)
     h = req_json.get("height", 512)
